@@ -1,4 +1,4 @@
-import { Box3, Mesh, SphereGeometry, Vector3 } from 'three';
+import { Box3, Mesh, MeshPhysicalMaterial, SphereGeometry, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { TIERS, tierDef } from '../core/tiers';
 import { CreatureMeshFactory } from './CreatureMeshFactory';
@@ -27,6 +27,33 @@ describe('CreatureMeshFactory', () => {
     for (const t of TIERS) {
       const eyes = factory.createCreature(t.id).children.filter((c) => c.name === 'eye');
       expect(eyes).toHaveLength(2);
+    }
+  });
+
+  it('gives every creature eye highlights and two blush cheeks', () => {
+    for (const t of TIERS) {
+      const names = factory.createCreature(t.id).children.map((c) => c.name);
+      expect(names.filter((n) => n === 'eyeShine').length).toBeGreaterThanOrEqual(2);
+      expect(names.filter((n) => n === 'cheek')).toHaveLength(2);
+    }
+  });
+
+  it('gives every tier a distinct set of parts so species read apart beyond color', () => {
+    const signatures = TIERS.map((t) =>
+      [...new Set(factory.createCreature(t.id).children.map((c) => c.name))].sort().join(','),
+    );
+    expect(new Set(signatures).size).toBe(TIERS.length);
+  });
+
+  it('uses a glossy clear-coated body for solid creatures and a translucent one for sea angel and jellyfish', () => {
+    for (const t of TIERS) {
+      const body = factory.createCreature(t.id).getObjectByName('body') as Mesh;
+      const mat = body.material;
+      if (Array.isArray(mat)) throw new Error('single material expected');
+      expect(mat).toBeInstanceOf(MeshPhysicalMaterial);
+      const jelly = t.shape === 'seaAngel' || t.shape === 'jellyfish';
+      expect(mat.transparent).toBe(jelly);
+      if (!jelly) expect((mat as MeshPhysicalMaterial).clearcoat).toBeGreaterThan(0.5);
     }
   });
 

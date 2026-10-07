@@ -6,24 +6,78 @@
     <title>Ocean Merge</title>
     <link rel="icon" href="data:," />
     <style>
-      html, body { margin: 0; height: 100%; overflow: hidden; background: #06203a; }
+      :root {
+        --lagoon: #8feaf0;
+        --deep: #2e9ccb;
+        --abyss: #16608f;
+        --sand: #ffe3b3;
+        --coral: #ff7f9c;
+        --coral-edge: #d9577a;
+        --ink: #1e3a5f;
+        --foam: #f7fffe;
+        --round: "Arial Rounded MT Bold", "Hiragino Maru Gothic ProN", "Hiragino Maru Gothic Pro", "BIZ UDPGothic", "Nunito", system-ui, sans-serif;
+      }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: var(--deep); }
       #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-      #hud { position: fixed; inset: 0; pointer-events: none; font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; color: #eaf6ff; }
+      #hud { position: fixed; inset: 0; pointer-events: none; font-family: var(--round); color: var(--foam); -webkit-font-smoothing: antialiased; }
       #hud .hidden { display: none !important; }
-      #hud .hud-panel { position: absolute; display: flex; gap: 16px; padding: 12px 16px; box-sizing: border-box; }
-      #hud[data-mode="top"] .hud-panel { left: 0; right: 0; top: 0; justify-content: center; align-items: flex-start; }
-      #hud[data-mode="sides"] .hud-panel { left: 0; top: 0; bottom: 0; width: 22%; flex-direction: column; justify-content: center; }
-      #hud .hud-stat { min-width: 88px; }
-      #hud .hud-label { font-size: 12px; letter-spacing: 0.08em; opacity: 0.75; text-transform: uppercase; }
-      #hud .hud-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
-      #hud .hud-next { display: flex; align-items: center; gap: 8px; }
-      #hud .hud-chip { border-radius: 50%; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.25); }
-      #hud .hud-chip-name { font-size: 14px; }
-      #hud .hud-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(3, 18, 34, 0.6); pointer-events: auto; }
-      #hud .hud-card { background: #0f3b63; border-radius: 16px; padding: 24px 32px; text-align: center; min-width: 240px; }
-      #hud .hud-over-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-      #hud .hud-over-score { font-size: 16px; margin-bottom: 20px; }
-      #hud .hud-button { min-width: 160px; min-height: 48px; font-size: 18px; border: 0; border-radius: 12px; background: #ffd27a; color: #0b2239; cursor: pointer; }
+
+      #hud .hud-panel { position: absolute; display: flex; box-sizing: border-box; padding: max(12px, env(safe-area-inset-top)) 16px 12px; }
+      #hud[data-mode="top"] .hud-panel { left: 0; right: 0; top: 0; justify-content: space-between; align-items: center; max-width: 520px; margin: 0 auto; }
+      #hud[data-mode="sides"] .hud-panel { left: 0; top: 0; bottom: 0; width: 22%; flex-direction: column; justify-content: center; align-items: center; gap: 40px; }
+
+      #hud .hud-label { font-size: 13px; font-weight: 700; opacity: 0.9; }
+      #hud .hud-scorebox { display: flex; flex-direction: column; align-items: flex-start; }
+      #hud[data-mode="sides"] .hud-scorebox { align-items: center; }
+      #hud .hud-score {
+        font-size: clamp(36px, 9vw, 52px); line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums;
+        color: var(--foam); text-shadow: 0 3px 0 var(--abyss), 0 6px 14px rgba(22, 96, 143, 0.45);
+        transform-origin: 30% 80%;
+      }
+      #hud .hud-score.bump { animation: bump 0.32s cubic-bezier(.3, 1.8, .5, 1); }
+      @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.14, 0.9); } 100% { transform: scale(1); } }
+      #hud .hud-best { margin-top: 6px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; background: rgba(22, 96, 143, 0.45); }
+      #hud .hud-best-value { font-variant-numeric: tabular-nums; }
+
+      #hud .hud-nextbox { display: flex; align-items: center; gap: 10px; }
+      #hud[data-mode="sides"] .hud-nextbox { flex-direction: column; text-align: center; }
+      #hud .hud-next-text { display: flex; flex-direction: column; gap: 2px; }
+      #hud .hud-next-name { font-size: 15px; font-weight: 700; }
+      #hud .hud-bubble {
+        width: clamp(64px, 17vw, 84px); aspect-ratio: 1; border-radius: 50%;
+        background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55) 0 7%, rgba(255,255,255,0) 18%),
+                    radial-gradient(circle at 50% 50%, rgba(143,234,240,0.10) 55%, rgba(247,255,254,0.38) 100%);
+        box-shadow: inset 0 0 0 2px rgba(247,255,254,0.75), 0 6px 18px rgba(22, 96, 143, 0.35);
+      }
+      #hud[data-mode="sides"] .hud-bubble { width: clamp(84px, 9vw, 120px); }
+
+      #hud .hud-overlay {
+        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px;
+        background: rgba(22, 96, 143, 0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); pointer-events: auto;
+        animation: fade 0.3s ease-out;
+      }
+      #hud .hud-card {
+        width: min(320px, 100%); box-sizing: border-box; padding: 28px 24px 24px; border-radius: 32px; text-align: center; color: var(--ink);
+        background: linear-gradient(180deg, rgba(247,255,254,0.95), rgba(214,250,252,0.92));
+        box-shadow: inset 0 0 0 3px rgba(255,255,255,0.9), 0 18px 40px rgba(22, 96, 143, 0.35);
+        animation: rise 0.45s cubic-bezier(.3, 1.6, .5, 1);
+      }
+      #hud .hud-over-title { font-size: 20px; font-weight: 700; opacity: 0.85; }
+      #hud .hud-over-score { margin: 6px 0 4px; font-size: 64px; line-height: 1.05; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--deep); text-shadow: 0 3px 0 rgba(30, 58, 95, 0.15); }
+      #hud .hud-over-best { margin-bottom: 22px; font-size: 15px; font-weight: 700; opacity: 0.7; }
+      #hud .hud-button {
+        min-width: 184px; min-height: 52px; padding: 0 28px; border: 0; border-radius: 999px; cursor: pointer;
+        font: 700 19px var(--round); color: #fff; background: var(--coral);
+        box-shadow: 0 5px 0 var(--coral-edge), 0 10px 18px rgba(217, 87, 122, 0.35);
+        transition: transform 0.08s, box-shadow 0.08s;
+      }
+      #hud .hud-button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--coral-edge), 0 4px 10px rgba(217, 87, 122, 0.3); }
+      #hud .hud-button:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+      @keyframes rise { from { transform: translateY(24px) scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }
+      @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        #hud .hud-score.bump, #hud .hud-card, #hud .hud-overlay { animation: none; }
+      }
       #hud .hud-message { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; font-size: 16px; }
     </style>
     <script src="https://www.youtube.com/game_api/v1"></script>

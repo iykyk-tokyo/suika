@@ -205,12 +205,18 @@ type SaveDataV1 = {
 
 ## 6. 描画（three.js）
 
-- `WebGLRenderer`（`antialias: true`、`pixelRatio` は `min(devicePixelRatio, 2)`）、`OrthographicCamera` を z 正方向から箱の正面に向ける。
-- 箱は半透明の壁 3 面と床。危険ラインは細い発光する帯。背景はグラデーションの平面とゆっくり上昇する泡（`Points`）。
-- 物体は tier ごとに `CreatureMeshFactory` が 1 回だけジオメトリを組み立ててキャッシュし、物体ごとに `Mesh` を生成。胴体の球にプリミティブ（円錐・円柱・扁平球）でヒレや触手を付け、目は小さな暗色の球 2 つ。マテリアルは `MeshToonMaterial`、光源は `HemisphereLight` と `DirectionalLight`。
-- 物理の位置と角度を毎フレーム `mesh.position.x/y` と `mesh.rotation.z` に写す。
-- 合体時は泡のパーティクルを 0.4 秒だけ出す。
-- 狙い中の物体は出現位置に半透明で表示し、着弾予測の縦線を箱の床まで描く。
+- アートディレクションは「陽だまりの水槽に並ぶソフビ」。色は `render/palette.ts`（Lagoon `#8FEAF0` / Deep `#2E9CCB` / Sand `#FFE3B3` / Coral `#FF7F9C` / Ink `#1E3A5F` / Foam `#F7FFFE`）を描画層と HUD で共有する。
+- `WebGLRenderer`（`antialias: true`、`pixelRatio` は `min(devicePixelRatio, 2)`、`NeutralToneMapping`）、`OrthographicCamera` を z 正方向から箱の正面に向ける（入力の座標変換を単純に保つため透視にはしない）。奥行きは背景の層・質感・動きで出す。
+- 環境マップは `RoomEnvironment` を `PMREMGenerator` で焼いてコード生成する。光源は `HemisphereLight`、暖色のキーライト、背後上方からの水色のリムライト。
+- 背景（`Backdrop`）: 水深グラデーション＋揺れるコースティクスのシェーダー平面、加算合成の光の筋、砂丘 2 層、揺れる海藻、サンゴとヒトデ、上昇する泡（`InstancedMesh`、フレネルの泡シェーダー）。
+- 水槽（`Tank`）: 角丸のガラス壁（半透明の `MeshPhysicalMaterial`＋白いツヤ筋）、砂色の床、奥のガラス。危険ラインはコーラル色のドット列、照準ガイドは下へ流れる白いドット列。
+- 物体は tier ごとに `CreatureMeshFactory` が 1 回だけジオメトリを組み立ててキャッシュし、物体ごとに `Mesh` を生成。胴体は当たり判定と同じ半径の球。マテリアルはクリアコート付きの `MeshPhysicalMaterial`（クリオネ・クラゲは半透明）。顔は黒目＋ハイライト 2 つ、ほっぺ 2 つ、種ごとの口（にっこり／ω／おちょぼ口）。付属パーツ（触手は `TubeGeometry` の曲線、ヒレ、トゲ、エラ、潮吹きなど）で、種ごとにパーツ構成が異なり色以外でも見分けられる。見た目の大きさは物理半径の 1.6 倍以内。
+- 物理の位置と角度を毎フレーム写す。生き物ごとの見た目だけの動きは `CreatureAnimator`（純粋ロジック）が持つ: 合体で生まれた個体のポップイン、上向き速度変化による着地の潰れ（バネ減衰）、呼吸、まばたき。加えて羽・触手・ヒレの揺れ、照準の方への視線、落下前の個体は下を見る。
+- 物体の影は奥のガラスに柔らかい円として落とす（シャドウマップは使わない）。
+- 合体時は広がる光の輪、はじける泡、きらめく星を出す。ペンギン以上の合体では短く画面を揺らす。
+- 狙い中の物体は出現位置に半透明で表示し、上下にふわふわ揺らす。
+- HUD の「つぎ」は泡の中に次の生き物を 3D で表示する（`NextPreview` が HUD 要素の矩形にシザーで重ねて描画）。
+- `prefers-reduced-motion: reduce` のときは揺れ・ポップ・画面揺れ・背景アニメを止める。
 - WebGL が初期化できない場合は Canvas をやめて DOM に日英メッセージを出し `logError`。
 
 ## 7. レイアウトと入力

@@ -79,7 +79,10 @@ export async function bootstrap(canvas: HTMLCanvasElement, hudRoot: HTMLElement)
     },
     dropped: () => sfx.playDrop(),
     scoreChanged: (score, best) => hud.setScore(score, best),
-    nextChanged: (tier) => hud.setNext(tier),
+    nextChanged: (tier) => {
+      hud.setNext(tier);
+      renderer.setNextPreview(tier, () => hud.nextPreviewRect());
+    },
     gameOver: (score, best) => {
       hud.showGameOver(score, best);
       sfx.playGameOver();
