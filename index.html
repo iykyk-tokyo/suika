@@ -4,10 +4,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Ocean Merge</title>
+    <link rel="icon" href="data:," />
     <style>
       html, body { margin: 0; height: 100%; overflow: hidden; background: #06203a; }
       #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
       #hud { position: fixed; inset: 0; pointer-events: none; font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; color: #eaf6ff; }
+      #hud .hidden { display: none !important; }
+      #hud .hud-panel { position: absolute; display: flex; gap: 16px; padding: 12px 16px; box-sizing: border-box; }
+      #hud[data-mode="top"] .hud-panel { left: 0; right: 0; top: 0; justify-content: center; align-items: flex-start; }
+      #hud[data-mode="sides"] .hud-panel { left: 0; top: 0; bottom: 0; width: 22%; flex-direction: column; justify-content: center; }
+      #hud .hud-stat { min-width: 88px; }
+      #hud .hud-label { font-size: 12px; letter-spacing: 0.08em; opacity: 0.75; text-transform: uppercase; }
+      #hud .hud-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      #hud .hud-next { display: flex; align-items: center; gap: 8px; }
+      #hud .hud-chip { border-radius: 50%; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.25); }
+      #hud .hud-chip-name { font-size: 14px; }
+      #hud .hud-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(3, 18, 34, 0.6); pointer-events: auto; }
+      #hud .hud-card { background: #0f3b63; border-radius: 16px; padding: 24px 32px; text-align: center; min-width: 240px; }
+      #hud .hud-over-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+      #hud .hud-over-score { font-size: 16px; margin-bottom: 20px; }
+      #hud .hud-button { min-width: 160px; min-height: 48px; font-size: 18px; border: 0; border-radius: 12px; background: #ffd27a; color: #0b2239; cursor: pointer; }
+      #hud .hud-message { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; font-size: 16px; }
     </style>
     <script src="https://www.youtube.com/game_api/v1"></script>
   </head>

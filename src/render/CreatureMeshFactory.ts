@@ -35,9 +35,9 @@ function appendages(shape: CreatureShape, def: TierDef): Part[] {
     case 'jellyfish':
       return [-0.5, -0.17, 0.17, 0.5].map((k) => ({
         name: 'tentacle',
-        geometry: new CylinderGeometry(r * 0.07, r * 0.04, r * 0.9, 8),
+        geometry: new CylinderGeometry(r * 0.07, r * 0.04, r * 0.8, 8),
         color: c,
-        position: [r * k, -r * 0.95, 0] as const,
+        position: [r * k, -r * 0.6, 0] as const,
       }));
     case 'pufferfish':
       return [
@@ -54,7 +54,7 @@ function appendages(shape: CreatureShape, def: TierDef): Part[] {
         name: 'tentacle',
         geometry: new CylinderGeometry(r * 0.09, r * 0.05, r * 0.8, 8),
         color: c,
-        position: [r * k, -r * 0.95, 0] as const,
+        position: [r * k, -r * 0.6, 0] as const,
       }));
     case 'penguin':
       return [
