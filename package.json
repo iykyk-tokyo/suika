@@ -1,0 +1,38 @@
+{
+  "name": "ocean-merge",
+  "version": "0.1.0",
+  "description": "",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "check:bundle": "node scripts/check-bundle.mjs",
+    "zip": "node scripts/make-zip.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iykyk-tokyo/suika.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/iykyk-tokyo/suika/issues"
+  },
+  "homepage": "https://github.com/iykyk-tokyo/suika#readme",
+  "private": true,
+  "dependencies": {
+    "matter-js": "^0.20.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/matter-js": "^0.20.2",
+    "@types/three": "^0.186.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.7",
+    "vitest": "^4.1.11"
+  }
+}
