@@ -6,7 +6,7 @@ import {
   HemisphereLight,
   Mesh,
   MeshBasicMaterial,
-  MeshStandardMaterial,
+  MeshToonMaterial,
   OrthographicCamera,
   PlaneGeometry,
   Scene,
@@ -53,7 +53,7 @@ export class SceneRenderer {
     sun.position.set(-4, 10, 12);
     this.scene.add(hemi, sun);
 
-    const wallMat = new MeshStandardMaterial({ color: WALL_COLOR, transparent: true, opacity: 0.22, roughness: 0.2 });
+    const wallMat = new MeshToonMaterial({ color: WALL_COLOR, transparent: true, opacity: 0.22 });
     const thickness = 0.3;
     const floor = new Mesh(new BoxGeometry(BOX.width + thickness * 2, thickness, 3), wallMat);
     floor.position.set(0, -thickness / 2, 0);
