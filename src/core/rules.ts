@@ -1,5 +1,5 @@
-import { nextTier, tierDef } from './tiers';
-import type { BodyId, BodyState, ContactPair, MergeResult, SpawnRequest } from './types';
+import { BOX, nextTier, tierDef } from './tiers';
+import type { BodyId, BodyState, ContactPair, MergeResult, SpawnRequest, TierId } from './types';
 
 export function resolveMerges(
   contacts: readonly ContactPair[],
@@ -32,4 +32,39 @@ export function resolveMerges(
   }
 
   return { removed, spawned, scoreDelta };
+}
+
+export interface GameOverOptions {
+  readonly dangerY: number;
+  readonly restSpeed: number;
+  readonly holdSec: number;
+}
+
+export const DEFAULT_GAME_OVER: GameOverOptions = { dangerY: BOX.dangerY, restSpeed: 0.2, holdSec: 1.0 };
+
+export interface GameOverEval {
+  readonly over: boolean;
+  readonly timerSec: number;
+}
+
+export function evaluateGameOver(
+  bodies: readonly BodyState[],
+  dtSec: number,
+  timerSec: number,
+  options: GameOverOptions = DEFAULT_GAME_OVER,
+): GameOverEval {
+  const offending = bodies.some((b) => {
+    const top = b.position.y + tierDef(b.tier).radius;
+    const speed = Math.hypot(b.velocity.x, b.velocity.y);
+    return top > options.dangerY && speed < options.restSpeed;
+  });
+  if (!offending) return { over: false, timerSec: 0 };
+  const next = timerSec + dtSec;
+  return { over: next >= options.holdSec, timerSec: next };
+}
+
+export function clampAimX(x: number, tier: TierId, boxWidth: number = BOX.width): number {
+  const r = tierDef(tier).radius;
+  const limit = boxWidth / 2 - r;
+  return Math.min(limit, Math.max(-limit, x));
 }

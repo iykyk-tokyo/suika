@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveMerges } from './rules';
+import { DEFAULT_GAME_OVER, clampAimX, evaluateGameOver, resolveMerges } from './rules';
 import type { BodyId, BodyState, TierId } from './types';
 
 function body(id: BodyId, tier: TierId, x: number, y: number, vx = 0, vy = 0): BodyState {
@@ -57,5 +57,55 @@ describe('resolveMerges', () => {
   it('skips self contacts', () => {
     const r = resolveMerges([{ a: 1, b: 1 }], map(body(1, 0, 0, 0)));
     expect(r.removed).toEqual([]);
+  });
+});
+
+describe('evaluateGameOver', () => {
+  const resting = (y: number, tier: TierId = 4): BodyState => body(1, tier, 0, y);
+
+  it('stays not-over while nothing is above the danger line', () => {
+    const r = evaluateGameOver([resting(5)], 0.5, 0);
+    expect(r).toEqual({ over: false, timerSec: 0 });
+  });
+
+  it('accumulates while a resting body pokes above the line', () => {
+    // tier 4 radius 1.0 → top = 10.5 + 1.0 = 11.5 > 11
+    const r = evaluateGameOver([resting(10.5)], 0.5, 0);
+    expect(r.over).toBe(false);
+    expect(r.timerSec).toBeCloseTo(0.5);
+  });
+
+  it('declares game over once the timer reaches holdSec', () => {
+    const r = evaluateGameOver([resting(10.5)], 0.5, 0.6);
+    expect(r.over).toBe(true);
+  });
+
+  it('resets the timer when the body is moving', () => {
+    const falling: BodyState = { ...resting(10.5), velocity: { x: 0, y: -3 } };
+    const r = evaluateGameOver([falling], 0.5, 0.9);
+    expect(r).toEqual({ over: false, timerSec: 0 });
+  });
+
+  it('resets the timer when nothing is above the line anymore', () => {
+    const r = evaluateGameOver([resting(2)], 0.5, 0.9);
+    expect(r.timerSec).toBe(0);
+  });
+
+  it('uses the radius of the body tier', () => {
+    // tier 0 radius 0.4 → top = 10.8 → not above 11
+    expect(evaluateGameOver([resting(10.4, 0)], 0.5, 0).timerSec).toBe(0);
+  });
+
+  it('default options match the spec', () => {
+    expect(DEFAULT_GAME_OVER).toEqual({ dangerY: 11, restSpeed: 0.2, holdSec: 1.0 });
+  });
+});
+
+describe('clampAimX', () => {
+  it('keeps x inside the walls by one radius', () => {
+    expect(clampAimX(-100, 4)).toBe(-4);
+    expect(clampAimX(100, 4)).toBe(4);
+    expect(clampAimX(0.3, 0)).toBe(0.3);
+    expect(clampAimX(4.9, 0)).toBeCloseTo(4.6);
   });
 });
