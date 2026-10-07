@@ -26,8 +26,8 @@ export interface TierDef {
 
 export const TIERS: readonly TierDef[] = [
   { id: 0, nameJa: 'プランクトン', nameEn: 'Plankton', radius: 0.4, mergeScore: 1, baseColor: 0xb8f2a6, accentColor: 0x6fcf7a, shape: 'plankton' },
-  { id: 1, nameJa: 'クリオネ', nameEn: 'Sea Angel', radius: 0.52, mergeScore: 3, baseColor: 0xf6d9ff, accentColor: 0xff8fcf, shape: 'seaAngel' },
-  { id: 2, nameJa: 'クラゲ', nameEn: 'Jellyfish', radius: 0.66, mergeScore: 6, baseColor: 0xc7b8ff, accentColor: 0x8a6cff, shape: 'jellyfish' },
+  { id: 1, nameJa: 'クリオネ', nameEn: 'Sea Angel', radius: 0.52, mergeScore: 3, baseColor: 0xff9ed2, accentColor: 0xff4fa3, shape: 'seaAngel' },
+  { id: 2, nameJa: 'クラゲ', nameEn: 'Jellyfish', radius: 0.66, mergeScore: 6, baseColor: 0x8f7cff, accentColor: 0x5a3fe0, shape: 'jellyfish' },
   { id: 3, nameJa: 'フグ', nameEn: 'Pufferfish', radius: 0.82, mergeScore: 10, baseColor: 0xffd27a, accentColor: 0xd98f1f, shape: 'pufferfish' },
   { id: 4, nameJa: 'カニ', nameEn: 'Crab', radius: 1.0, mergeScore: 15, baseColor: 0xff7a5c, accentColor: 0xc73e22, shape: 'crab' },
   { id: 5, nameJa: 'タコ', nameEn: 'Octopus', radius: 1.2, mergeScore: 21, baseColor: 0xe06ca8, accentColor: 0x9c3b73, shape: 'octopus' },

@@ -30,7 +30,7 @@ describe('CreatureMeshFactory', () => {
     }
   });
 
-  it('ghost is translucent', () => {
+  it('ghost is translucent but readable (opacity between 0.7 and 1)', () => {
     const ghost = factory.createGhost(3);
     const body = ghost.getObjectByName('body') as Mesh;
     const mat = body.material;
@@ -38,7 +38,14 @@ describe('CreatureMeshFactory', () => {
     if (!Array.isArray(mat)) {
       expect(mat.transparent).toBe(true);
       expect(mat.opacity).toBeLessThan(1);
+      expect(mat.opacity).toBeGreaterThanOrEqual(0.7);
     }
+  });
+
+  it.each(TIERS.map((t) => [t.id] as const))('ghost of tier %i shows the same parts as the creature so shapes stay recognizable', (id) => {
+    const creature = factory.createCreature(id);
+    const ghost = factory.createGhost(id);
+    expect(ghost.children.map((c) => c.name)).toEqual(creature.children.map((c) => c.name));
   });
 
   it('shares geometry between creatures of the same tier', () => {

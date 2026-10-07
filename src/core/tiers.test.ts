@@ -21,6 +21,20 @@ describe('TIERS', () => {
     expect(TIERS.map((t) => t.mergeScore)).toEqual([1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66]);
   });
 
+  it('droppable tiers have clearly distinct base colors (RGB distance >= 85 for every pair)', () => {
+    const rgb = (c: number) => [(c >> 16) & 0xff, (c >> 8) & 0xff, c & 0xff] as const;
+    const droppable = TIERS.filter((t) => t.id <= DROPPABLE_TIER_MAX);
+    for (const a of droppable) {
+      for (const b of droppable) {
+        if (a.id >= b.id) continue;
+        const [r1, g1, b1] = rgb(a.baseColor);
+        const [r2, g2, b2] = rgb(b.baseColor);
+        const dist = Math.hypot(r1 - r2, g1 - g2, b1 - b2);
+        expect(dist, `${a.nameEn} vs ${b.nameEn}`).toBeGreaterThanOrEqual(85);
+      }
+    }
+  });
+
   it('every tier has both names and a shape', () => {
     for (const t of TIERS) {
       expect(t.nameJa.length).toBeGreaterThan(0);

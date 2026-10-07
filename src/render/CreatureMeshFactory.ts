@@ -118,7 +118,7 @@ export class CreatureMeshFactory {
     let m = cache.get(color);
     if (m === undefined) {
       m = ghost
-        ? new MeshToonMaterial({ color, transparent: true, opacity: 0.45, depthWrite: false })
+        ? new MeshToonMaterial({ color, transparent: true, opacity: 0.75, depthWrite: false })
         : new MeshToonMaterial({ color });
       cache.set(color, m);
     }
@@ -131,7 +131,7 @@ export class CreatureMeshFactory {
     const body = new Mesh(this.bodyGeometry(tier), this.material(def.baseColor, ghost));
     body.name = 'body';
     group.add(body);
-    const parts = ghost ? [] : this.parts(tier);
+    const parts = this.parts(tier);
     for (const p of parts) {
       const mesh = new Mesh(p.geometry, this.material(p.color, ghost));
       mesh.name = p.name;
