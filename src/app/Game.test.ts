@@ -192,3 +192,32 @@ describe('snapshot and pause', () => {
     expect(world.getBodies()[0]!.position.y).toBeLessThan(yBefore);
   });
 });
+
+describe('restart guard and raiseBest', () => {
+  it('restart() is ignored while playing (prevents double restart from Enter + button click)', () => {
+    const { game, host, presenter } = make();
+    game.drop();
+    game.restart();
+    expect(presenter.restarted).not.toHaveBeenCalled();
+    expect(host.save).not.toHaveBeenCalled();
+  });
+
+  it('restart() is ignored while paused even after game over', () => {
+    const { game, presenter } = makeOver();
+    run(game, 2);
+    game.pause();
+    game.restart();
+    expect(presenter.restarted).not.toHaveBeenCalled();
+    expect(game.phase).toBe('gameover');
+  });
+
+  it('raiseBest() lifts best from late cloud data and notifies the HUD', () => {
+    const { game, presenter } = make({ v: 1, bestScore: 10, snapshot: null });
+    game.raiseBest(99);
+    expect(game.best).toBe(99);
+    expect(presenter.scoreChanged).toHaveBeenLastCalledWith(0, 99);
+    game.raiseBest(5);
+    expect(game.best).toBe(99);
+    expect(game.snapshot().bestScore).toBe(99);
+  });
+});

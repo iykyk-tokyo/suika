@@ -89,6 +89,7 @@ function appendages(shape: CreatureShape, def: TierDef): Part[] {
 
 export class CreatureMeshFactory {
   private readonly bodyGeometries = new Map<TierId, SphereGeometry>();
+  private readonly partsByTier = new Map<TierId, readonly Part[]>();
   private readonly materials = new Map<number, MeshToonMaterial>();
   private readonly ghostMaterials = new Map<number, MeshToonMaterial>();
 
@@ -99,6 +100,17 @@ export class CreatureMeshFactory {
       this.bodyGeometries.set(tier, g);
     }
     return g;
+  }
+
+  // 付属パーツ（目・ヒレ・触手）のジオメトリは tier ごとに 1 回だけ作って共有する。
+  private parts(tier: TierId): readonly Part[] {
+    let p = this.partsByTier.get(tier);
+    if (p === undefined) {
+      const def = tierDef(tier);
+      p = [...appendages(def.shape, def), ...eyes(def.radius)];
+      this.partsByTier.set(tier, p);
+    }
+    return p;
   }
 
   private material(color: number, ghost: boolean): MeshToonMaterial {
@@ -119,7 +131,7 @@ export class CreatureMeshFactory {
     const body = new Mesh(this.bodyGeometry(tier), this.material(def.baseColor, ghost));
     body.name = 'body';
     group.add(body);
-    const parts = ghost ? [] : [...appendages(def.shape, def), ...eyes(def.radius)];
+    const parts = ghost ? [] : this.parts(tier);
     for (const p of parts) {
       const mesh = new Mesh(p.geometry, this.material(p.color, ghost));
       mesh.name = p.name;
@@ -140,6 +152,8 @@ export class CreatureMeshFactory {
 
   dispose(): void {
     for (const g of this.bodyGeometries.values()) g.dispose();
+    for (const parts of this.partsByTier.values()) for (const p of parts) p.geometry.dispose();
+    this.partsByTier.clear();
     for (const m of this.materials.values()) m.dispose();
     for (const m of this.ghostMaterials.values()) m.dispose();
     this.bodyGeometries.clear();

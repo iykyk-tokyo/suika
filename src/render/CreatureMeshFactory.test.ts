@@ -46,4 +46,11 @@ describe('CreatureMeshFactory', () => {
     const b = factory.createCreature(2).getObjectByName('body') as Mesh;
     expect(a.geometry).toBe(b.geometry);
   });
+
+  it.each(TIERS.map((t) => [t.id] as const))('tier %i shares every part geometry (eyes, fins, tentacles) between instances', (id) => {
+    const a = factory.createCreature(id).children as Mesh[];
+    const b = factory.createCreature(id).children as Mesh[];
+    expect(a.length).toBe(b.length);
+    a.forEach((mesh, i) => expect(mesh.geometry).toBe(b[i]!.geometry));
+  });
 });

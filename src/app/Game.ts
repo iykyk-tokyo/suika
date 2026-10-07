@@ -101,6 +101,7 @@ export class Game {
   }
 
   restart(): void {
+    if (this.phase !== 'gameover' || this.paused) return;
     this.world.clear();
     this.phase = 'playing';
     this.score = 0;
@@ -118,6 +119,13 @@ export class Game {
     this.presenter.nextChanged(this.nextTier);
     this.presenter.aimChanged(this.nextTier, this.aimX);
     this.host.save(this.snapshot());
+  }
+
+  // 遅れて届いたクラウドセーブのベストを反映する（セーブと sendScore の一致を守る）。
+  raiseBest(best: number): void {
+    if (best <= this.best) return;
+    this.best = best;
+    this.presenter.scoreChanged(this.score, this.best);
   }
 
   update(dtSec: number): void {
