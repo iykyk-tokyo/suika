@@ -12,6 +12,7 @@ export interface SnapshotBody {
 
 export interface BoardSnapshot {
   readonly score: number;
+  readonly currentTier: TierId;
   readonly nextTier: TierId;
   readonly bodies: readonly SnapshotBody[];
 }
@@ -38,6 +39,7 @@ export function serializeSave(save: SaveData): string {
       ? null
       : {
           score: save.snapshot.score,
+          currentTier: save.snapshot.currentTier,
           nextTier: save.snapshot.nextTier,
           bodies: save.snapshot.bodies.map((b) => ({ t: b.t, x: round3(b.x), y: round3(b.y), a: round3(b.a) })),
         };
@@ -50,6 +52,10 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 
 function isFiniteNumber(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v);
+}
+
+function isDroppableTier(v: unknown): v is TierId {
+  return isFiniteNumber(v) && isTierId(v) && v <= DROPPABLE_TIER_MAX;
 }
 
 function parseBody(v: unknown): SnapshotBody | null {
@@ -66,7 +72,10 @@ function parseSnapshot(v: unknown): BoardSnapshot | null | undefined {
   if (!isRecord(v)) return undefined;
   const { score, nextTier, bodies } = v;
   if (!isFiniteNumber(score) || score < 0) return undefined;
-  if (!isFiniteNumber(nextTier) || !isTierId(nextTier) || nextTier > DROPPABLE_TIER_MAX) return undefined;
+  if (!isDroppableTier(nextTier)) return undefined;
+  // currentTier 導入前のセーブは nextTier が手持ちだったので、それを手持ちとして引き継ぐ。
+  const currentTier = 'currentTier' in v ? v['currentTier'] : nextTier;
+  if (!isDroppableTier(currentTier)) return undefined;
   if (!Array.isArray(bodies)) return undefined;
   const parsed: SnapshotBody[] = [];
   for (const b of bodies) {
@@ -74,7 +83,7 @@ function parseSnapshot(v: unknown): BoardSnapshot | null | undefined {
     if (pb === null) return undefined;
     parsed.push(pb);
   }
-  return { score, nextTier, bodies: parsed };
+  return { score, currentTier, nextTier, bodies: parsed };
 }
 
 function parseV1(obj: Record<string, unknown>): SaveData | null {

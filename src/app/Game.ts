@@ -40,6 +40,8 @@ export class Game {
   score = 0;
   best: number;
   aimX = 0;
+  // 手持ち（照準に出ている）と「つぎ」に表示する 1 つ先。
+  currentTier: TierId;
   nextTier: TierId;
   dropReady = true;
 
@@ -62,9 +64,11 @@ export class Game {
   ) {
     this.gameOverOptions = options.gameOver ?? DEFAULT_GAME_OVER;
     this.best = initial.bestScore;
+    this.currentTier = nextDropTier(this.rng);
     this.nextTier = nextDropTier(this.rng);
     if (initial.snapshot !== null) {
       this.score = initial.snapshot.score;
+      this.currentTier = initial.snapshot.currentTier;
       this.nextTier = initial.snapshot.nextTier;
       for (const b of initial.snapshot.bodies) this.world.addBody(b.t, { x: b.x, y: b.y }, { x: 0, y: 0 }, b.a);
     }
@@ -72,13 +76,13 @@ export class Game {
     this.presenter.bodiesChanged(this.world.getBodies());
     this.presenter.scoreChanged(this.score, this.best);
     this.presenter.nextChanged(this.nextTier);
-    this.presenter.aimChanged(this.nextTier, this.aimX);
+    this.presenter.aimChanged(this.currentTier, this.aimX);
   }
 
   aimAt(unitX: number): void {
     if (this.phase !== 'playing' || this.paused) return;
-    this.aimX = clampAimX(unitX, this.nextTier);
-    this.presenter.aimChanged(this.dropReady ? this.nextTier : null, this.aimX);
+    this.aimX = clampAimX(unitX, this.currentTier);
+    this.presenter.aimChanged(this.dropReady ? this.currentTier : null, this.aimX);
   }
 
   nudge(direction: -1 | 1): void {
@@ -87,12 +91,13 @@ export class Game {
 
   drop(): void {
     if (this.phase !== 'playing' || this.paused || !this.dropReady) return;
-    const tier = this.nextTier;
+    const tier = this.currentTier;
     this.droppedId = this.world.addBody(tier, { x: clampAimX(this.aimX, tier), y: BOX.spawnY });
     this.dropReady = false;
     this.dropCooldown = DROP_COOLDOWN_SEC;
+    this.currentTier = this.nextTier;
     this.nextTier = nextDropTier(this.rng);
-    this.aimX = clampAimX(this.aimX, this.nextTier);
+    this.aimX = clampAimX(this.aimX, this.currentTier);
     this.dirty = true;
     this.presenter.dropped();
     this.presenter.nextChanged(this.nextTier);
@@ -111,13 +116,14 @@ export class Game {
     this.droppedId = null;
     this.gameOverTimer = 0;
     this.accumulator = 0;
+    this.currentTier = nextDropTier(this.rng);
     this.nextTier = nextDropTier(this.rng);
     this.dirty = false;
     this.presenter.restarted();
     this.presenter.bodiesChanged([]);
     this.presenter.scoreChanged(this.score, this.best);
     this.presenter.nextChanged(this.nextTier);
-    this.presenter.aimChanged(this.nextTier, this.aimX);
+    this.presenter.aimChanged(this.currentTier, this.aimX);
     this.host.save(this.snapshot());
   }
 
@@ -142,6 +148,7 @@ export class Game {
         ? null
         : {
             score: this.score,
+            currentTier: this.currentTier,
             nextTier: this.nextTier,
             bodies: this.world.getBodies().map((b) => ({ t: b.tier, x: b.position.x, y: b.position.y, a: b.angle })),
           };
@@ -170,7 +177,7 @@ export class Game {
       if (collided || this.dropCooldown <= 0) {
         this.dropReady = true;
         this.droppedId = null;
-        if (this.phase === 'playing') this.presenter.aimChanged(this.nextTier, this.aimX);
+        if (this.phase === 'playing') this.presenter.aimChanged(this.currentTier, this.aimX);
       }
     }
 

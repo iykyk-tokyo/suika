@@ -186,7 +186,8 @@ type SaveDataV1 = {
   bestScore: number;
   snapshot: {
     score: number;
-    nextTier: TierId;
+    currentTier: TierId;   // 手持ち。欠けている旧セーブは nextTier を手持ちとして読む
+    nextTier: TierId;      // 「つぎ」に表示する 1 つ先
     bodies: readonly { t: TierId; x: number; y: number; a: number }[];
   } | null;
 };
@@ -215,7 +216,7 @@ type SaveDataV1 = {
 - 物体の影は奥のガラスに柔らかい円として落とす（シャドウマップは使わない）。
 - 合体時は広がる光の輪、はじける泡、きらめく星を出す。ペンギン以上の合体では短く画面を揺らす。
 - 狙い中の物体は出現位置に半透明で表示し、上下にふわふわ揺らす。
-- HUD の「つぎ」は泡の中に次の生き物を 3D で表示する（`NextPreview` が HUD 要素の矩形にシザーで重ねて描画）。
+- HUD の「つぎ」は泡の中に、手持ち（照準に出ている生き物）の 1 つ先の生き物を 3D で表示する。落とすと「つぎ」が手持ちに繰り上がり、新しい「つぎ」を抽選する（`NextPreview` が HUD 要素の矩形にシザーで重ねて描画）。
 - `prefers-reduced-motion: reduce` のときは揺れ・ポップ・画面揺れ・背景アニメを止める。
 - WebGL が初期化できない場合は Canvas をやめて DOM に日英メッセージを出し `logError`。
 

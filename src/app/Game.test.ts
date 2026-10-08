@@ -38,10 +38,13 @@ function make(initial: SaveData = createEmptySave()) {
 }
 
 describe('Game start', () => {
-  it('starts playing with a droppable next tier and aim at center', () => {
-    const { game } = make();
+  it('starts playing with droppable current and next tiers and aim at center', () => {
+    const { game, presenter } = make();
     expect(game.phase).toBe('playing');
+    expect(game.currentTier).toBeLessThanOrEqual(4);
     expect(game.nextTier).toBeLessThanOrEqual(4);
+    expect(presenter.aimChanged).toHaveBeenLastCalledWith(game.currentTier, 0);
+    expect(presenter.nextChanged).toHaveBeenLastCalledWith(game.nextTier);
     expect(game.aimX).toBe(0);
     expect(game.dropReady).toBe(true);
     expect(game.score).toBe(0);
@@ -51,10 +54,11 @@ describe('Game start', () => {
     const { game, world } = make({
       v: 1,
       bestScore: 50,
-      snapshot: { score: 12, nextTier: 3, bodies: [{ t: 2, x: 1, y: 0.66, a: 0 }, { t: 5, x: -2, y: 1.2, a: 0.3 }] },
+      snapshot: { score: 12, currentTier: 1, nextTier: 3, bodies: [{ t: 2, x: 1, y: 0.66, a: 0 }, { t: 5, x: -2, y: 1.2, a: 0.3 }] },
     });
     expect(game.score).toBe(12);
     expect(game.best).toBe(50);
+    expect(game.currentTier).toBe(1);
     expect(game.nextTier).toBe(3);
     expect(world.getBodies().map((b) => b.tier).sort()).toEqual([2, 5]);
   });
@@ -64,8 +68,8 @@ describe('aiming', () => {
   it('clamps aim to the walls and notifies the presenter', () => {
     const { game, presenter } = make();
     game.aimAt(100);
-    expect(game.aimX).toBeCloseTo(BOX.width / 2 - tierDef(game.nextTier).radius);
-    expect(presenter.aimChanged).toHaveBeenLastCalledWith(game.nextTier, game.aimX);
+    expect(game.aimX).toBeCloseTo(BOX.width / 2 - tierDef(game.currentTier).radius);
+    expect(presenter.aimChanged).toHaveBeenLastCalledWith(game.currentTier, game.aimX);
   });
 
   it('nudges by 0.25 units', () => {
@@ -81,7 +85,7 @@ describe('aiming', () => {
 describe('dropping', () => {
   it('spawns the current tier at the aim and blocks further drops until ready', () => {
     const { game, world, presenter } = make();
-    const tier = game.nextTier;
+    const tier = game.currentTier;
     game.aimAt(1);
     game.drop();
     expect(world.getBodies()).toHaveLength(1);
@@ -91,6 +95,18 @@ describe('dropping', () => {
     expect(presenter.dropped).toHaveBeenCalledTimes(1);
     game.drop();
     expect(world.getBodies()).toHaveLength(1);
+  });
+
+  it('promotes the previewed next tier to the hand and previews a fresh one', () => {
+    const { game, world, presenter } = make();
+    const first = game.currentTier;
+    const second = game.nextTier;
+    game.drop();
+    expect(world.getBodies()[0]!.tier).toBe(first);
+    expect(game.currentTier).toBe(second);
+    expect(presenter.nextChanged).toHaveBeenLastCalledWith(game.nextTier);
+    run(game, 0.7);
+    expect(presenter.aimChanged).toHaveBeenLastCalledWith(second, game.aimX);
   });
 
   it('becomes ready again within 0.6 s even without a collision', () => {
@@ -105,13 +121,13 @@ describe('dropping', () => {
     game.drop();
     expect(presenter.aimChanged).toHaveBeenLastCalledWith(null, expect.any(Number));
     run(game, 0.7);
-    expect(presenter.aimChanged).toHaveBeenLastCalledWith(game.nextTier, game.aimX);
+    expect(presenter.aimChanged).toHaveBeenLastCalledWith(game.currentTier, game.aimX);
   });
 });
 
 describe('merging', () => {
   it('merges two equal bodies dropped on the same spot and scores', () => {
-    const { game, world, presenter, host } = make({ v: 1, bestScore: 0, snapshot: { score: 0, nextTier: 1, bodies: [{ t: 1, x: 0, y: 0.52, a: 0 }] } });
+    const { game, world, presenter, host } = make({ v: 1, bestScore: 0, snapshot: { score: 0, currentTier: 1, nextTier: 1, bodies: [{ t: 1, x: 0, y: 0.52, a: 0 }] } });
     game.aimAt(0);
     game.drop();
     run(game, 3);
@@ -132,7 +148,7 @@ function makeOver() {
   const world = new MatterWorld();
   const presenter = presenterSpy();
   const host = hostSpy();
-  const game = new Game(world, presenter, host, new Rng(1), { v: 1, bestScore: 0, snapshot: { score: 70, nextTier: 0, bodies: OVERFLOW_BODIES } }, LOW_LINE);
+  const game = new Game(world, presenter, host, new Rng(1), { v: 1, bestScore: 0, snapshot: { score: 70, currentTier: 0, nextTier: 0, bodies: OVERFLOW_BODIES } }, LOW_LINE);
   return { world, presenter, host, game };
 }
 
@@ -150,7 +166,7 @@ describe('game over', () => {
 
   it('does not end while the body is still falling', () => {
     const world = new MatterWorld();
-    const game = new Game(world, presenterSpy(), hostSpy(), new Rng(1), { v: 1, bestScore: 0, snapshot: { score: 0, nextTier: 0, bodies: [{ t: 4, x: 0, y: 12, a: 0 }] } }, LOW_LINE);
+    const game = new Game(world, presenterSpy(), hostSpy(), new Rng(1), { v: 1, bestScore: 0, snapshot: { score: 0, currentTier: 0, nextTier: 0, bodies: [{ t: 4, x: 0, y: 12, a: 0 }] } }, LOW_LINE);
     run(game, 0.5);
     expect(game.phase).toBe('playing');
   });
@@ -176,6 +192,7 @@ describe('snapshot and pause', () => {
     run(game, 2);
     const s = game.snapshot();
     expect(s.snapshot?.bodies).toHaveLength(1);
+    expect(s.snapshot?.currentTier).toBe(game.currentTier);
     expect(s.snapshot?.nextTier).toBe(game.nextTier);
   });
 
